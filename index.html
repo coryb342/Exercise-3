@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Exercise 2 (Tic Tac Toe)</title>
+        <title>Exercise 3 (Tic Tac Toe)</title>
         <link rel="stylesheet" href="style.css">
         <script src="scripts.js" defer></script>
     </head>
 
     <body>
         <div>
-            <h1>Accelerated Tic Tac Toe</h1>
-            <p style="font-weight: bold; font-size: large;">Start the game by selecting two squares first, or press Start for the computer to go first.</p>
+            <h1>Tic Tac Toe</h1>
+            <p style="font-weight: bold; font-size: large;">Start the game by either selecting 'Create Game' or 'Join Game'. Once selected you can press 'Start'. <p> 
+            <p style="font-weight: bold; font-size: large;">Once the game has started, make sure to press 'Load Board' to update the board with your Opponents current positions. <p> 
+
             <p>For information on how this game was built, view the <a href="out/global.html" target="_blank">jsdoc</a>.</p>
             <table class="tic-tac-toe-board">
                 <tr>
@@ -30,7 +32,8 @@
             </table>
             <div id="file-handler-buttons">
                 <input type="button" class="file-handler" id="create-game" value="Create Game" onclick="createGameStateJson()">
-                <input type="button" class="file-handler" id="join-game" value="Join Game" onclick="loadGameStateJson()">
+                <input type="button" class="file-handler" id="join-game" value="Join Game" onclick="joinGameStateJson()">
+                <input type="button" class="file-handler" id="Load-game-state" value="Load Board" onclick="loadGameState()">
             </div>
             <input type="button" id="start-clear" value="Start" onclick="startGame()">
         </div>
