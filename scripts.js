@@ -39,7 +39,7 @@ let assigned_player = null;
 
 
 // Game state logic
-async function loadGameStateJson() {
+async function joinGameStateJson() {
     const [fileHandle] = await window.showOpenFilePicker({
         types: [{ description: 'Game State JSON File', accept: { 'application/json': ['.json'] } }],
         excludeAcceptAllOption: true,
@@ -96,6 +96,15 @@ async function saveGameState() {
     const writable = await game_state_file_handle.createWritable();
     await writable.write(JSON.stringify(current_game_state));
     await writable.close();
+}
+
+async function loadGameState() {
+    if (!game_state_file_handle) return;
+
+    const file = await game_state_file_handle.getFile();
+    const contents = await file.text();
+    current_game_state = JSON.parse(contents);
+    updateBoard();
 }
 
 
@@ -172,18 +181,24 @@ function swapPlayer() {
 async function startGame() {
     if (start_clear_button.value === 'Start') {
         if (current_game_state.current_status === 'player_assign') {
-
             if (!current_game_state.player_1_assigned) {
                 assigned_player = player_1;
                 current_game_state.player_1_assigned = true;
                 alert(`You are Player 1 (O)!`);
-            } else {
+            } else if (!current_game_state.player_2_assigned) {
                 assigned_player = player_2;
                 current_game_state.player_2_assigned = true;
                 alert(`You are Player 2 (X)!`);
-            } 
-            current_game_state.current_status = 'playing';
+            } else {
+                alert("Both players are already assigned! Please reset the game or load a new one.");
+                return; 
+            }
 
+            if (current_game_state.player_1_assigned && current_game_state.player_2_assigned) {
+                current_game_state.current_status = 'playing';
+            }
+
+            await saveGameState(); // save immediately
         }
 
         current_game_state.current_player = player_1;
@@ -192,7 +207,6 @@ async function startGame() {
         updateBoard();
         start_clear_button.value = 'Clear';
         return;
-
     } else {
         await resetGame();
         start_clear_button.value = 'Start';
@@ -210,12 +224,22 @@ async function startGame() {
  * @return {void}
  */
 async function playerMove(event) {
-    if (!current_game_state || current_game_state.game_over) return;
+    if (!game_state_file_handle) return;
+
+    await loadGameState(); 
+    updateBoard();
+
+    if (current_game_state.game_over) return;
 
     const target = event.target;
     const pos = target.id;
 
     if (target.value !== '') return;
+
+    if (current_game_state.current_player !== assigned_player) {
+        alert("It's not your turn!");
+        return;
+    }
 
     const current_icon = current_game_state.current_player;
 
@@ -236,10 +260,10 @@ async function playerMove(event) {
     updateBoard();
 }
 
-document.addEventListener('click', async function (event) {
-    if (event.target.classList.contains('board-space')) {
-        await playerMove(event);
-    }
+document.addEventListener("DOMContentLoaded", () => {
+    board.forEach(space => {
+        space.addEventListener('click', playerMove);
+    });
 });
 
 async function resetGame() {
@@ -250,6 +274,8 @@ async function resetGame() {
     current_game_state.game_over = false;
     current_game_state.player_1.held_positions = [];
     current_game_state.player_2.held_positions = [];
+    current_game_state.player_1_assigned = false;
+    current_game_state.player_2_assigned = false;
 
     await saveGameState();
     updateBoard();
