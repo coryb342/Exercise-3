@@ -74,6 +74,8 @@ async function createGameStateJson() {
         move_number: 1,
         game_over: false,
         last_winner: null,
+        player_1_assigned: false,
+        player_2_assigned: false,
         player_1: { name: "Player 1", icon: player_1, held_positions: [] },
         player_2: { name: "Player 2", icon: player_2, held_positions: [] },
     };
@@ -89,7 +91,12 @@ async function createGameStateJson() {
     //need to update board here
 }
 
-
+async function saveGameState() {
+    if (!game_state_file_handle || !current_game_state) return;
+    const writable = await game_state_file_handle.createWritable();
+    await writable.write(JSON.stringify(current_game_state));
+    await writable.close();
+}
 
 
 /**
@@ -162,45 +169,37 @@ function swapPlayer() {
  * @param {Event} event - The click event on the board space, signifying human player starting the game. Defaults to null.
  * @return {void}
  */
-function startGame(event = null) {
+async function startGame() {
     if (start_clear_button.value === 'Start') {
+        if (current_game_state.current_status === 'player_assign') {
+
+            if (!current_game_state.player_1_assigned) {
+                assigned_player = player_1;
+                current_game_state.player_1_assigned = true;
+                alert(`You are Player 1 (O)!`);
+            } else {
+                assigned_player = player_2;
+                current_game_state.player_2_assigned = true;
+                alert(`You are Player 2 (X)!`);
+            } 
+            current_game_state.current_status = 'playing';
+
+        }
+
+        current_game_state.current_player = player_1;
+        alert(`Player 1 goes first!`);
+        await saveGameState();
+        updateBoard();
         start_clear_button.value = 'Clear';
-        if (event) {
-            current_player = human_player;
-            playerMove(event);
-        }
-        if (current_player === computer_player) {
-            game_started = true;
-            disableBoard();
-            setTimeout(() => {
-                computerMove();
-            }, 500);
-        }
-        
+        return;
+
     } else {
-        resetGame();
+        await resetGame();
+        start_clear_button.value = 'Start';
+        return;
     }
 }
 
-/**
- * Handles the click event on the board spaces.
- * If the game has not started, it initializes the game.
- * If the game is ongoing and the clicked space is empty, it processes the player's move.
- * @param {Event} event - The click event on the board space.
- * @return {void}
- */
-document.addEventListener('click', function(event) {
-    if (!game_started && event.target.classList.contains('board-space')) {
-        current_player = human_player;
-        game_started = true;
-        startGame(event);
-        return;
-    }
-
-    if (event.target.classList.contains('board-space') && !game_over && current_player === human_player) {
-        playerMove(event);
-    }
-});
 
 /**
  * Handles the player's move on the board.
@@ -241,20 +240,20 @@ document.addEventListener('click', async function (event) {
     if (event.target.classList.contains('board-space')) {
         await playerMove(event);
     }
-
-    if (event.target.id === 'start-clear') {
-
-        current_game_state.current_status = 'player_assign';
-        current_game_state.current_player = null;
-        current_game_state.move_number = 1;
-        current_game_state.game_over = false;
-        current_game_state.player_1.held_positions = [];
-        current_game_state.player_2.held_positions = [];
-
-        await saveGameState();
-        updateBoard();
-    }
 });
+
+async function resetGame() {
+
+    current_game_state.current_status = 'player_assign';
+    current_game_state.current_player = null;
+    current_game_state.move_number = 1;
+    current_game_state.game_over = false;
+    current_game_state.player_1.held_positions = [];
+    current_game_state.player_2.held_positions = [];
+
+    await saveGameState();
+    updateBoard();
+}
 
 
 /**
