@@ -32,12 +32,18 @@ const winning_combos = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7], [2, 5, 8], [
 const board = document.querySelectorAll('.board-space');
 
 let start_clear_button = document.querySelector('#start-clear');
+let load_board_button = document.querySelector('#load-game-state');
+let create_game_button = document.querySelector('#create-game');
+let join_game_button = document.querySelector('#join-game');
+
+start_clear_button.disabled = true;
+load_board_button.disabled = true;
 
 let current_game_state = null;
 let game_state_file_handle = null;
 let assigned_player = null;
 let game_over_acknowledge = false;
-
+disableBoard(); 
 
 // Game state logic
 
@@ -61,9 +67,10 @@ async function joinGameStateJson() {
     game_state_file_handle = fileHandle;
     current_game_state = gameState;
 
-    alert("You have joined the game!");
+    alert("You have joined the game! You can now press Start to begin the game.");
     start_clear_button.disabled = false;
-    //need to update board here
+    create_game_button.disabled = true;
+    join_game_button.disabled = true;
 }
 
 /** * Creates a new game state and saves it to a JSON file.
@@ -99,9 +106,10 @@ async function createGameStateJson() {
     game_state_file_handle = fileHandle;
     current_game_state = makeState;
 
-    alert("Game Created Successfully!");
+    alert("Game Created Successfully! You can now Press Start to begin the game.");
     start_clear_button.disabled = false;
-    //need to update board here
+    create_game_button.disabled = true;
+    join_game_button.disabled = true;
 }
 
 async function saveGameState() {
@@ -198,6 +206,7 @@ function swapPlayer() {
  */
 async function startGame() {
     if (start_clear_button.value === 'Start') {
+        load_board_button.disabled = false;
         await loadGameState();
         if (current_game_state.current_status === 'player_assign') {
             if (!current_game_state.player_1_assigned) {
@@ -303,6 +312,11 @@ async function resetGame() {
     current_game_state.player_2.held_positions = [];
     current_game_state.player_1_assigned = false;
     current_game_state.player_2_assigned = false;
+    game_over_acknowledge = false;
+    disableBoard();
+    load_board_button.disabled = true;
+    create_game_button.disabled = false;
+    join_game_button.disabled = false;
 
     await saveGameState();
     updateBoard();
@@ -356,33 +370,35 @@ function updateBoard() {
         if (el) el.value = player_2;
     });
 
-    if (current_game_state.game_over && !game_over_acknowledge) {
-            disableBoard();
-            if (!document.querySelector('.winning-space') ) {
-                for (const combo of winning_combos) {
-                const p1 = current_game_state.player_1.held_positions;
-                const p2 = current_game_state.player_2.held_positions;
+    if (current_game_state.game_over) {
+        disableBoard();
 
+        const p1 = current_game_state.player_1.held_positions;
+        const p2 = current_game_state.player_2.held_positions;
+        let winnerFound = false;
+
+        for (const combo of winning_combos) {
             if (combo.every(pos => p1.includes(pos.toString()))) {
                 highligtWinningCombo(combo);
-                alert("Player 1 Wins!");
+                if (!game_over_acknowledge) alert("Player 1 Wins!");
+                winnerFound = true;
                 break;
             } else if (combo.every(pos => p2.includes(pos.toString()))) {
                 highligtWinningCombo(combo);
-                alert("Player 2 Wins!");
+                if (!game_over_acknowledge) alert("Player 2 Wins!");
+                winnerFound = true;
                 break;
             }
-
-            game_over_acknowledge = true;
         }
 
-        // If no winning combo found, it's a draw
-        if (!document.querySelector('.winning-space')) {
-                alert("It's a draw!");
-            }
+        if (!winnerFound && !game_over_acknowledge) {
+            alert("It's a draw!");
         }
+
+        game_over_acknowledge = true;
 
     } else {
+        // Only enable the board if the game is still ongoing
         enableBoard();
     }
 }

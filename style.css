@@ -60,11 +60,11 @@ input.winning-space {
 }
 
 #start-clear[value="Start"]:hover {
-    background-color: darkgreen;
+    opacity: 0.8;
 }
 
 #start-clear[value="Clear"]:hover {
-    background-color: darkred;
+    opacity: 0.8;
 }
 
 #start-clear:disabled {
@@ -82,7 +82,8 @@ input.winning-space {
     font-size: 24px;
     cursor: pointer;
     border: none;
-    color: purple;
+    color: white;
+    background-color: blue;
     margin: 10px;
     border-radius: 5px;
 }
