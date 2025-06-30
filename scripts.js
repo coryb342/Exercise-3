@@ -35,6 +35,7 @@ let start_clear_button = document.querySelector('#start-clear');
 
 let current_game_state = null;
 let game_state_file_handle = null;
+let assigned_player = null;
 
 
 // Game state logic
@@ -54,6 +55,7 @@ async function loadGameStateJson() {
 
     alert("You have joined the game!");
     start_clear_button.disabled = false;
+    //need to update board here
 }
 
 // File creation
@@ -67,18 +69,13 @@ async function createGameStateJson() {
     const writable = await fileHandle.createWritable();
 
     const makeState = {
-        current_status: 'setting_players',
+        current_status: 'player_assign',
         current_player: null,
-        move_number: 0,
+        move_number: 1,
         game_over: false,
-        die_roll: null,
-        previous_winner: null,
-        die_guess_1: null,
-        die_guess_2: null,
+        last_winner: null,
         player_1: { name: "Player 1", icon: player_1, held_positions: [] },
         player_2: { name: "Player 2", icon: player_2, held_positions: [] },
-        player_1_assigned: false,
-        player_2_assigned: false
     };
 
     await writable.write(JSON.stringify(makeState));
@@ -89,7 +86,10 @@ async function createGameStateJson() {
 
     alert("Game Created Successfully!");
     start_clear_button.disabled = false;
+    //need to update board here
 }
+
+
 
 
 /**
@@ -107,7 +107,7 @@ function isWinner(player_icon) {
             return true;
         }
     }
-    if (current_move > num_board_spaces) {
+    if (current_game_state.move_number > num_board_spaces) {
         setGameOver(true);
         return true;
     }
@@ -121,31 +121,22 @@ function isWinner(player_icon) {
  * @return {void}
  */
 function setGameOver(is_game_over, player = '') {
+    current_game_state.game_over = is_game_over;
+
     if (is_game_over && player === '') {
-        disableBoard(); 
-        start_clear_button.disabled = false; 
-        setTimeout(() => {
-            alert("It's a draw!");;
-        }, 150); 
-        return;
-    }
-    if (is_game_over && player === current_game_state.player_1.icon) {
         disableBoard();
-        start_clear_button.disabled = false;
-        setTimeout(() => {
-            alert("Player 1 Wins!");;
-        }, 150); 
+        alert("It's a draw!");
         return;
     }
-    if (is_game_over && player === current_game_state.player_2.icon) {
+
+    if (player === current_game_state.player_1.icon) {
         disableBoard();
-        start_clear_button.disabled = false;  
-        setTimeout(() => {
-            alert("Player 2 Wins!");;
-        }, 150); 
-        return;
+        alert("Player 1 Wins!");
+
+    } else if (player === current_game_state.player_2.icon) {
+        disableBoard();
+        alert("Player 2 Wins!");
     }
-    return;
 }
 
 /**
@@ -153,19 +144,9 @@ function setGameOver(is_game_over, player = '') {
  * @param {string} player - The current player.
  * @return {void}
  */
-function swapPlayer(player) {
-    if (player === current_game_state.player_1.icon) {
-        current_player = current_game_state.player_2.icon;
-        disableBoard();
-        setTimeout(() => {
-            computerMove();
-        }, 500);
-    } else if (player === current_game_state.player_2.icon) {
-        setTimeout(() => {
-            enableBoard();
-        }, 500);
-        current_player = current_game_state.player_1.icon; 
-    }
+function swapPlayer() {
+    current_game_state.current_player =
+        current_game_state.current_player === player_1 ? player_2 : player_1;
 }
 
 // GUI Logic
@@ -290,6 +271,30 @@ function enableBoard() {
     board.forEach(space => {
         space.disabled = false;
     });
+}
+
+function updateBoard() {
+    board.forEach(space => {
+        space.value = '';
+        space.disabled = false;
+        space.classList.remove('winning-space');
+    });
+
+    current_game_state.player_1.held_positions.forEach(pos => {
+        const el = document.getElementById(pos);
+        if (el) el.value = player_1;
+    });
+
+    current_game_state.player_2.held_positions.forEach(pos => {
+        const el = document.getElementById(pos);
+        if (el) el.value = player_2;
+    });
+
+    if (current_game_state.game_over) {
+        disableBoard();
+    } else {
+        enableBoard();
+    }
 }
 
 /**
