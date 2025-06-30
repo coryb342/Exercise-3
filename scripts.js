@@ -35,6 +35,7 @@ let start_clear_button = document.querySelector('#start-clear');
 let create_game_button = document.querySelector('#create-game');
 let join_game_button = document.querySelector('#join-game');
 let player_tag = document.querySelector("#player_tag");
+let reload_interval = null;
 
 start_clear_button.disabled = true;
 
@@ -125,6 +126,11 @@ async function loadGameState() {
     const contents = await file.text();
     current_game_state = JSON.parse(contents);
     updateBoard();
+
+    if (current_game_state.game_over && reload_interval) {
+        clearInterval(reload_interval);
+        reload_interval = null;
+    }
 }
 
 
@@ -239,7 +245,7 @@ async function startGame() {
         await saveGameState();
         updateBoard();
         start_clear_button.value = 'Clear';
-        setInterval(loadGameState, 2000);
+        reload_interval = setInterval(loadGameState, 2000);
         return;
     } else {
         await resetGame();
@@ -326,9 +332,11 @@ async function resetGame() {
         player_tag.textContent = "You are: Player 2 (X)"
     }
     
-    disableBoard();
+    clearInterval(reload_interval);
     await saveGameState();
-    updateBoard();
+    await updateBoard();
+    disableBoard();
+
 }
 
 
@@ -362,7 +370,7 @@ function enableBoard() {
  * If no winning combination is found, it alerts the user that the game is a draw.
  * @return {void}
  */
-function updateBoard() {
+async function updateBoard() {
     board.forEach(space => {
         space.value = '';
         space.disabled = false;
