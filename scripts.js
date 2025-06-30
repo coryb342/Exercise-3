@@ -1,17 +1,17 @@
 /**
  * File: scripts.js
  * Author: Cory Bateman     
- * Date: 06/08/2025
- * Description: This script is used for the tick-tac-toe game.
+ * Date: 06/29/2025
+ * Description: This script is used for the tick-tac-toe game with JSON state management using File System Access API.
  */
 
 /**
- * Human Player Icon
+ * Player 2 Icon
  * @const {string}
  */
 const player_2 = 'X';
 /**
- * Computer Player Icon
+ * Player 1 Icon
  * @const {string}
  */
 const player_1 = 'O';
@@ -36,9 +36,17 @@ let start_clear_button = document.querySelector('#start-clear');
 let current_game_state = null;
 let game_state_file_handle = null;
 let assigned_player = null;
+let game_over_acknowledge = false;
 
 
 // Game state logic
+
+/** * Joins an existing game state from a JSON file.
+ * Prompts the user to select a JSON file containing the game state.
+ * Parses the file and updates the current game state.
+ * Enables the start/clear button for further actions.
+ * @return {Promise<void>}
+ */
 async function joinGameStateJson() {
     const [fileHandle] = await window.showOpenFilePicker({
         types: [{ description: 'Game State JSON File', accept: { 'application/json': ['.json'] } }],
@@ -58,7 +66,12 @@ async function joinGameStateJson() {
     //need to update board here
 }
 
-// File creation
+/** * Creates a new game state and saves it to a JSON file.
+ * Prompts the user to save a new JSON file containing the initial game state.
+ * Initializes the game state with default values and saves it to the file.
+ * Enables the start/clear button for further actions.
+ * @return {Promise<void>}
+ */
 async function createGameStateJson() {
     const fileHandle = await window.showSaveFilePicker({
         suggestedName: 'game_state.json',
@@ -108,11 +121,12 @@ async function loadGameState() {
 }
 
 
-/**
- * Checks if the player has a winning combination or if the game is a draw.
- * Highlights the winning combination if the player has won.
- * @param {string} player - The player to check for a win.
- * @returns boolean - Returns true if the player has won, false otherwise.
+/** * Checks if the current player has won the game.
+ * It checks the held positions of the current player against the winning combinations.
+ * If a winning combination is found, it highlights the winning spaces and sets the game over state.
+ * If no winning combination is found and the move number exceeds the number of board spaces, it sets the game over state to a draw.
+ * @param {string} player_icon - The icon of the current player (either player_1 or player_2).
+ * @return {boolean} - Returns true if the player has won or if the game is a draw, false otherwise.
  */
 function isWinner(player_icon) {
     const held_positions = player_icon === player_1 ? current_game_state.player_1.held_positions : current_game_state.player_2.held_positions;
@@ -130,14 +144,17 @@ function isWinner(player_icon) {
     return false;
 }
 
-/**
- * Sets the game over state and displays an alert based on the outcome.
- * @param {boolean} is_game_over - The game over state.
- * @param {string} player - The player who won, if applicable.
- * @return {void}
+/** * Sets the game over state and handles the end of the game.
+ * It disables the board, displays an alert with the result, and saves the game state.
+ * If the game is a draw, it alerts the user and does not save a winner.
+ * If a player has won, it saves the winner's name in the game state and alerts the user.
+ * @param {boolean} is_game_over - Indicates if the game is over.
+ * @param {string} [player=''] - The icon of the winning player, if applicable.
+ * @return {Promise<void>}
  */
 async function setGameOver(is_game_over, player = '') {
     current_game_state.game_over = is_game_over;
+     game_over_acknowledge = true;
 
     if (is_game_over && player === '') {
         disableBoard();
@@ -157,11 +174,12 @@ async function setGameOver(is_game_over, player = '') {
         await saveGameState()
         alert("Player 2 Wins!");
     }
+
 }
 
-/**
- * Swaps the current player and handles the game state accordingly.
- * @param {string} player - The current player.
+/** * Swaps the current player to the other player.
+ * If the current player is player_1, it changes to player_2, and vice versa.
+ * This is used to alternate turns between the two players.
  * @return {void}
  */
 function swapPlayer() {
@@ -171,15 +189,16 @@ function swapPlayer() {
 
 // GUI Logic
 
-/**
- * Starts the game or clears the board based on the button state.
- * If the button value is 'Start', it initializes the game.
- * If the button value is 'Clear', it resets the game state.
- * @param {Event} event - The click event on the board space, signifying human player starting the game. Defaults to null.
- * @return {void}
+/** * Starts the game by assigning players and setting the initial game state.
+ * If the game is already started, it resets the game.
+ * It checks if players are assigned and updates the game state accordingly.
+ * If both players are assigned, it sets the game status to 'playing' and saves the game state.
+ * It also sets the current player to player_1 and alerts the user.
+ * @return {Promise<void>}
  */
 async function startGame() {
     if (start_clear_button.value === 'Start') {
+        await loadGameState();
         if (current_game_state.current_status === 'player_assign') {
             if (!current_game_state.player_1_assigned) {
                 assigned_player = player_1;
@@ -215,13 +234,15 @@ async function startGame() {
 }
 
 
-/**
- * Handles the player's move on the board.
- * If the clicked space is empty and the game is not over, it marks the space with the human player's symbol.
- * It checks for a win or a draw after the move.
- * If the game is not over, it swaps the player to the computer.
+/** * Handles the player's move on the board.
+ * It checks if the game state is loaded, updates the board, and checks if the game is over.
+ * If the clicked space is already occupied, it returns early.
+ * If it's not the player's turn, it alerts the user and returns.
+ * It updates the clicked space with the current player's icon, increments the move number, and adds the position to the player's held positions.
+ * If the current player is not a winner, it swaps the player.
+ * Finally, it saves the game state and updates the board.
  * @param {Event} event - The click event on the board space.
- * @return {void}
+ * @return {Promise<void>}
  */
 async function playerMove(event) {
     if (!game_state_file_handle) return;
@@ -266,6 +287,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+/** * Resets the game state to its initial values.
+ * It sets the current status to 'player_assign', resets the current player, move number, and game over state.
+ * It also clears the held positions for both players and resets the player assignment flags.
+ * Finally, it saves the game state and updates the board.
+ * @return {Promise<void>}
+ */
 async function resetGame() {
 
     current_game_state.current_status = 'player_assign';
@@ -304,6 +331,14 @@ function enableBoard() {
     });
 }
 
+/** * Updates the board with the current game state.
+ * It clears all spaces, disables them, and highlights any winning spaces.
+ * It populates the board with the held positions of both players.
+ * If the game is over and no winning spaces are highlighted, it checks for winning combinations.
+ * If a winning combination is found, it highlights the winning spaces and alerts the user.
+ * If no winning combination is found, it alerts the user that the game is a draw.
+ * @return {void}
+ */
 function updateBoard() {
     board.forEach(space => {
         space.value = '';
@@ -321,8 +356,32 @@ function updateBoard() {
         if (el) el.value = player_2;
     });
 
-    if (current_game_state.game_over) {
-        disableBoard();
+    if (current_game_state.game_over && !game_over_acknowledge) {
+            disableBoard();
+            if (!document.querySelector('.winning-space') ) {
+                for (const combo of winning_combos) {
+                const p1 = current_game_state.player_1.held_positions;
+                const p2 = current_game_state.player_2.held_positions;
+
+            if (combo.every(pos => p1.includes(pos.toString()))) {
+                highligtWinningCombo(combo);
+                alert("Player 1 Wins!");
+                break;
+            } else if (combo.every(pos => p2.includes(pos.toString()))) {
+                highligtWinningCombo(combo);
+                alert("Player 2 Wins!");
+                break;
+            }
+
+            game_over_acknowledge = true;
+        }
+
+        // If no winning combo found, it's a draw
+        if (!document.querySelector('.winning-space')) {
+                alert("It's a draw!");
+            }
+        }
+
     } else {
         enableBoard();
     }
