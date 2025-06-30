@@ -1,0 +1,78 @@
+div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+table {
+    border-collapse: collapse;
+    margin: 10px;
+}
+
+tr, td {
+    border: solid;
+    border-width: 1px;
+    text-align: center;
+    width: 150px;
+    border-collapse: collapse;
+    padding: 0;
+}
+
+.board-space:disabled {
+    cursor: not-allowed;
+}
+
+input.board-space {
+    width: 150px;
+    height: 150px;
+    font-size: 52px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    background-color: white;
+    border-collapse: collapse;
+
+}
+
+input.winning-space {
+    color: red;
+    font-weight: bold;
+}
+
+#start-clear {
+    width: 200px;
+    height: 50px;
+    font-size: 24px;
+    cursor: pointer;
+    border: none;
+    color: white;
+    margin: 10px;
+    border-radius: 5px;
+}
+
+#start-clear[value="Start"] {
+    background-color: green;
+}
+
+#start-clear[value="Clear"] {
+    background-color: red;
+}
+
+#start-clear[value="Start"]:hover {
+    background-color: darkgreen;
+}
+
+#start-clear[value="Clear"]:hover {
+    background-color: darkred;
+}
+
+#start-clear:disabled {
+    background-color: gray;
+    cursor: not-allowed;
+}
+
+#start-clear:disabled:hover {
+    background-color: gray;
+}
+ 
