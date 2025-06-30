@@ -204,7 +204,6 @@ function swapPlayer() {
  */
 async function startGame() {
     if (start_clear_button.value === 'Start') {
-        load_board_button.disabled = false;
         await loadGameState();
         if (current_game_state.current_status === 'player_assign') {
             if (!current_game_state.player_1_assigned) {
@@ -313,7 +312,6 @@ async function resetGame() {
     current_game_state.player_2_assigned = false;
     game_over_acknowledge = false;
     disableBoard();
-    load_board_button.disabled = true;
     create_game_button.disabled = false;
     join_game_button.disabled = false;
 
