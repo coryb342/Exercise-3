@@ -107,3 +107,9 @@ input.winning-space {
     font-size: large;
     font-weight: bold;
 }
+#player_tag {
+    color: red;
+    font-size: larger;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+}

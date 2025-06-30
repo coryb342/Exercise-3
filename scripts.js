@@ -34,6 +34,7 @@ const board = document.querySelectorAll('.board-space');
 let start_clear_button = document.querySelector('#start-clear');
 let create_game_button = document.querySelector('#create-game');
 let join_game_button = document.querySelector('#join-game');
+let player_tag = document.querySelector("#player_tag");
 
 start_clear_button.disabled = true;
 
@@ -206,6 +207,7 @@ async function startGame() {
     if (start_clear_button.value === 'Start') {
         await loadGameState();
         if (current_game_state.current_status === 'player_assign') {
+            await loadGameState();
             if (!current_game_state.player_1_assigned) {
                 assigned_player = player_1;
                 current_game_state.player_1_assigned = true;
@@ -223,7 +225,13 @@ async function startGame() {
                 current_game_state.current_status = 'playing';
             }
 
-            await saveGameState(); // save immediately
+            await saveGameState();
+
+            if (assigned_player === player_1){
+                player_tag.textContent = "You are: Player 1 (O)"
+            } else if (assigned_player === player_2) {
+                player_tag.textContent = "You are: Player 2 (X)"
+            }
         }
 
         current_game_state.current_player = player_1;
@@ -302,7 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
  */
 async function resetGame() {
 
-    current_game_state.current_status = 'player_assign';
+    current_game_state.current_status = 'playing';
     current_game_state.current_player = null;
     current_game_state.move_number = 1;
     current_game_state.game_over = false;
@@ -311,10 +319,14 @@ async function resetGame() {
     current_game_state.player_1_assigned = false;
     current_game_state.player_2_assigned = false;
     game_over_acknowledge = false;
-    disableBoard();
-    create_game_button.disabled = false;
-    join_game_button.disabled = false;
 
+    if (assigned_player === player_1){
+        player_tag.textContent = "You are: Player 1 (O)"
+    } else if (assigned_player === player_2) {
+        player_tag.textContent = "You are: Player 2 (X)"
+    }
+    
+    disableBoard();
     await saveGameState();
     updateBoard();
 }
