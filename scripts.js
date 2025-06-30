@@ -120,7 +120,7 @@ function isWinner(player_icon) {
  * @param {string} player - The player who won, if applicable.
  * @return {void}
  */
-function setGameOver(is_game_over, player = '') {
+async function setGameOver(is_game_over, player = '') {
     current_game_state.game_over = is_game_over;
 
     if (is_game_over && player === '') {
@@ -129,12 +129,16 @@ function setGameOver(is_game_over, player = '') {
         return;
     }
 
-    if (player === current_game_state.player_1.icon) {
+    if (is_game_over && player === current_game_state.player_1.icon) {
         disableBoard();
+        current_game_state.last_winner = current_game_state.player_1.name;
+        await saveGameState();
         alert("Player 1 Wins!");
 
-    } else if (player === current_game_state.player_2.icon) {
+    } else if (is_game_over && player === current_game_state.player_2.icon) {
         disableBoard();
+        current_game_state.last_winner = current_game_state.player_2.name;
+        await saveGameState()
         alert("Player 2 Wins!");
     }
 }
@@ -206,50 +210,52 @@ document.addEventListener('click', function(event) {
  * @param {Event} event - The click event on the board space.
  * @return {void}
  */
-function playerMove(event) {
+async function playerMove(event) {
+    if (!current_game_state || current_game_state.game_over) return;
+
     const target = event.target;
-    if (target.value === '' && !game_over) {
-        target.value = human_player;
-        current_move++;
-        human_held_positions.push(target.id);
-        if (isWinner(human_player)) {
-            return;
-        }
-        if (current_move <= 2 && current_player === human_player) {
-            return;
-        } else {
-            swapPlayer(human_player);
-        }
+    const pos = target.id;
+
+    if (target.value !== '') return;
+
+    const current_icon = current_game_state.current_player;
+
+    target.value = current_icon;
+    current_game_state.move_number++;
+
+    if (current_icon === player_1) {
+        current_game_state.player_1.held_positions.push(pos);
+    } else {
+        current_game_state.player_2.held_positions.push(pos);
     }
-    return;
+
+    if (!isWinner(current_icon)) {
+        swapPlayer();
+    }
+
+    await saveGameState();
+    updateBoard();
 }
 
-/**
- * Handles the computer's move on the board.
- * It randomly selects an empty space on the board, marks it with the computer player's symbol,
- * and checks for a win or a draw after the move.
- * If the game is not over, it swaps the player to the human.
- * @return {void}
- */
-function computerMove() {
-    let computer_move = Math.floor(Math.random() * num_board_spaces);
-    while (board[computer_move].value !== '' || game_over) {
-        computer_move = Math.floor(Math.random() * num_board_spaces);
+document.addEventListener('click', async function (event) {
+    if (event.target.classList.contains('board-space')) {
+        await playerMove(event);
     }
-    board[computer_move].value = computer_player;
-    comp_held_positions.push(board[computer_move].id);
-    current_move++;
-    if (current_move === 2) {
-        disableBoard();
-        setTimeout(() => {
-            computerMove();
-        }, 500);
+
+    if (event.target.id === 'start-clear') {
+
+        current_game_state.current_status = 'player_assign';
+        current_game_state.current_player = null;
+        current_game_state.move_number = 1;
+        current_game_state.game_over = false;
+        current_game_state.player_1.held_positions = [];
+        current_game_state.player_2.held_positions = [];
+
+        await saveGameState();
+        updateBoard();
     }
-    if (isWinner(computer_player)) {
-        return;
-    }
-    swapPlayer(computer_player);
-}
+});
+
 
 /**
  * Disables all board spaces, preventing further moves.
@@ -295,28 +301,6 @@ function updateBoard() {
     } else {
         enableBoard();
     }
-}
-
-/**
- * Resets the game state, clearing the board and resetting all variables.
- * This is called when the 'Clear' button is clicked.
- * It also resets the button to 'Start' and enables the board for a new game.
- * @return {void}
- */
-function resetGame() {
-    game_over = false;
-    game_started = false;
-    current_player = computer_player;
-    current_move = 1;
-    comp_held_positions = [];
-    human_held_positions = [];
-    start_clear_button.value = 'Start';
-    start_clear_button.disabled = false;
-    enableBoard();
-    board.forEach(space => {
-        space.value = '';
-        space.classList.remove('winning-space');
-    });
 }
 
 /**
