@@ -28,6 +28,11 @@
                     <td><input type="button" id="9" class="board-space"></td>
                 </tr>
             </table>
+            <div id="guess-section" style="display: none;">
+                <p>Enter your guess (1–6):</p>
+                <input type="number" id="guess-input" min="1" max="6">
+                <button id="submit-guess">Submit Guess</button>
+            </div>
             <input type="button" id="start-clear" value="Start" onclick="startGame()">
         </div>
     </body>
