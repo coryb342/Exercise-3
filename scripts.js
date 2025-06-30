@@ -32,12 +32,10 @@ const winning_combos = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7], [2, 5, 8], [
 const board = document.querySelectorAll('.board-space');
 
 let start_clear_button = document.querySelector('#start-clear');
-let load_board_button = document.querySelector('#load-game-state');
 let create_game_button = document.querySelector('#create-game');
 let join_game_button = document.querySelector('#join-game');
 
 start_clear_button.disabled = true;
-load_board_button.disabled = true;
 
 let current_game_state = null;
 let game_state_file_handle = null;
