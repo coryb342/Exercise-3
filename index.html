@@ -10,7 +10,7 @@
         <div>
             <h1>Tic Tac Toe</h1>
             <p style="font-weight: bold; font-size: large;">Start the game by either selecting 'Create Game' or 'Join Game'. Once selected you can press 'Start'. <p> 
-            <p style="font-weight: bold; font-size: large;">Once the game has started, make sure to press 'Load Board' to update the board with your Opponents current positions. <p> 
+            <p style="font-weight: bold; font-size: large;">Once the game has started, the board will update every 2 seconds revealing your opponent's positons.<p> 
 
             <p>For information on how this game was built, view the <a href="out/global.html" target="_blank">jsdoc</a>.</p>
             <table class="tic-tac-toe-board">
@@ -33,7 +33,6 @@
             <div id="file-handler-buttons">
                 <input type="button" class="file-handler" id="create-game" value="Create Game" onclick="createGameStateJson()">
                 <input type="button" class="file-handler" id="join-game" value="Join Game" onclick="joinGameStateJson()">
-                <input type="button" class="file-handler" id="load-game-state" value="Load Board" onclick="loadGameState()">
             </div>
             <input type="button" id="start-clear" value="Start" onclick="startGame()">
         </div>

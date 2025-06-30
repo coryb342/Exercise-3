@@ -234,6 +234,7 @@ async function startGame() {
         await saveGameState();
         updateBoard();
         start_clear_button.value = 'Clear';
+        setInterval(loadGameState, 2000);
         return;
     } else {
         await resetGame();
@@ -398,7 +399,6 @@ function updateBoard() {
         game_over_acknowledge = true;
 
     } else {
-        // Only enable the board if the game is still ongoing
         enableBoard();
     }
 }
