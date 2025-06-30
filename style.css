@@ -100,3 +100,10 @@ input.winning-space {
     align-items: center;
     flex-direction: row;
 } 
+#instructions {
+    display: flex;
+    flex-direction: column;
+    margin: 2px;
+    font-size: large;
+    font-weight: bold;
+}
